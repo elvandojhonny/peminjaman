@@ -1,13 +1,15 @@
 <?php
+
 include 'koneksi.php';
 
-$data = [];
+$stmt = $koneksi->prepare("
+    SELECT * FROM ruang
+");
 
-$query = mysqli_query($koneksi, "SELECT * FROM ruang");
+$stmt->execute();
 
-while($row = mysqli_fetch_assoc($query)){
-    $data[] = $row;
-}
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode($data);
+
 ?>
