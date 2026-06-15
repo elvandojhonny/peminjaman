@@ -2,11 +2,16 @@
 
 include 'koneksi.php';
 
-$data = mysqli_query($koneksi, "SELECT * FROM users ORDER BY id DESC");
+$stmt = $koneksi->prepare("
+    SELECT * FROM users
+    ORDER BY id DESC
+");
 
-$result = array();
+$stmt->execute();
 
-while ($row = mysqli_fetch_assoc($data)) {
+$result = [];
+
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
     $result[] = [
 
@@ -26,5 +31,4 @@ while ($row = mysqli_fetch_assoc($data)) {
 }
 
 echo json_encode($result);
-
 ?>
