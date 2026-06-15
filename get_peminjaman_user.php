@@ -3,31 +3,32 @@
 include 'koneksi.php';
 include 'auto_update_status.php';
 
-$user_id = $_GET['user_id'];
+$user_id = $_GET['user_id'] ?? '';
 
-$data = array();
-
-$query = mysqli_query(
-    $koneksi,
-    "SELECT
+$stmt = $koneksi->prepare("
+    SELECT
         p.*,
         g.nama_gedung
     FROM peminjaman p
 
     LEFT JOIN ruang r
-    ON p.nama_ruang = r.nama_ruang
+        ON p.nama_ruang = r.nama_ruang
 
     LEFT JOIN gedung g
-    ON r.id_gedung = g.id
+        ON r.id_gedung = g.id
 
-    WHERE p.user_id = '$user_id'
+    WHERE p.user_id = ?
 
-    ORDER BY p.id DESC"
-);
+    ORDER BY p.id DESC
+");
 
-while ($row = mysqli_fetch_assoc($query)) {
+$stmt->execute([$user_id]);
 
-    $data[] = array(
+$data = [];
+
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+    $data[] = [
         "id" => $row['id'],
         "user_id" => $row['user_id'],
         "nama_peminjam" => $row['nama_peminjam'],
@@ -40,9 +41,7 @@ while ($row = mysqli_fetch_assoc($query)) {
         "keterangan" => $row['keterangan'],
         "status" => $row['status'],
         "alasan_ditolak" => $row['alasan_ditolak']
-    );
+    ];
 }
 
 echo json_encode($data);
-
-?>
