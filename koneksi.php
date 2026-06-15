@@ -2,7 +2,7 @@
 
 try {
 
-    $pdo = new PDO(
+    $koneksi = new PDO(
         "mysql:host=" . getenv('MYSQLHOST') .
         ";port=" . getenv('MYSQLPORT') .
         ";dbname=" . getenv('MYSQLDATABASE') .
@@ -11,7 +11,7 @@ try {
         getenv('MYSQLPASSWORD')
     );
 
-    $pdo->setAttribute(
+    $koneksi->setAttribute(
         PDO::ATTR_ERRMODE,
         PDO::ERRMODE_EXCEPTION
     );
