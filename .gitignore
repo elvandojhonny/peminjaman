@@ -1,0 +1,15 @@
+# Composer
+/vendor/
+
+# Firebase Credential
+firebase-key.json
+
+# Environment
+.env
+
+# VS Code
+.vscode/
+
+# Sistem
+.DS_Store
+Thumbs.db
