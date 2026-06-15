@@ -2,17 +2,14 @@
 
 include 'koneksi.php';
 
-$data = array();
+$data = [];
 
-$query = mysqli_query(
-    $koneksi,
-    "SELECT * FROM gedung"
-);
+$stmt = $koneksi->prepare("
+    SELECT * FROM gedung
+");
 
-while($row = mysqli_fetch_assoc($query)){
-    $data[] = $row;
-}
+$stmt->execute();
+
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode($data);
-
-?>
