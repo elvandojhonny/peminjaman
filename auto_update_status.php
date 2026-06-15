@@ -23,13 +23,13 @@ if (!function_exists('convertTanggalIndonesia')) {
 
         $pecah = explode(" ", trim($tanggal));
 
-        if(count($pecah) != 3){
+        if (count($pecah) != 3) {
             return null;
         }
 
         $hari = sprintf("%02d", (int)$pecah[0]);
 
-        if(!isset($bulan[$pecah[1]])){
+        if (!isset($bulan[$pecah[1]])) {
             return null;
         }
 
@@ -40,19 +40,18 @@ if (!function_exists('convertTanggalIndonesia')) {
     }
 }
 
-$query = mysqli_query(
-    $koneksi,
-    "SELECT *
-     FROM peminjaman
-     WHERE LOWER(status) IN ('disetujui','digunakan')"
-);
+$stmt = $koneksi->query("
+    SELECT *
+    FROM peminjaman
+    WHERE LOWER(status) IN ('disetujui','digunakan')
+");
 
-while($row = mysqli_fetch_assoc($query)){
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
     $tanggalMysql =
         convertTanggalIndonesia($row['tanggal']);
 
-    if(!$tanggalMysql){
+    if (!$tanggalMysql) {
         continue;
     }
 
@@ -66,39 +65,37 @@ while($row = mysqli_fetch_assoc($query)){
 
     $sekarang = time();
 
-    // =========================
     // DISSETUJUI -> DIGUNAKAN
-    // =========================
 
-    if(
+    if (
         strtolower($row['status']) == 'disetujui'
         &&
         $sekarang >= $waktuMulai
         &&
         $sekarang < $waktuSelesai
-    ){
+    ) {
 
-        mysqli_query(
-            $koneksi,
-            "UPDATE peminjaman
-             SET status='Digunakan'
-             WHERE id='".$row['id']."'"
-        );
+        $update = $koneksi->prepare("
+            UPDATE peminjaman
+            SET status='Digunakan'
+            WHERE id=?
+        ");
+
+        $update->execute([$row['id']]);
     }
 
-    // =========================
     // DIGUNAKAN -> SELESAI
-    // =========================
 
-    if(
+    if (
         $sekarang >= $waktuSelesai
-    ){
+    ) {
 
-        mysqli_query(
-            $koneksi,
-            "UPDATE peminjaman
-             SET status='Selesai'
-             WHERE id='".$row['id']."'"
-        );
+        $update = $koneksi->prepare("
+            UPDATE peminjaman
+            SET status='Selesai'
+            WHERE id=?
+        ");
+
+        $update->execute([$row['id']]);
     }
 }
