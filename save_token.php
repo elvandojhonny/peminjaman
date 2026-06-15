@@ -2,25 +2,28 @@
 
 include 'koneksi.php';
 
-$user_id = $_POST['user_id'];
-$token   = $_POST['token'];
+$user_id = $_POST['user_id'] ?? '';
+$token   = $_POST['token'] ?? '';
 
-$query = mysqli_query($koneksi,
-    "UPDATE users
-     SET fcm_token='$token'
-     WHERE id='$user_id'"
-);
+try {
 
-if ($query) {
+    $stmt = $koneksi->prepare("
+        UPDATE users
+        SET fcm_token = ?
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$token, $user_id]);
 
     echo json_encode([
         "success" => true
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
         "success" => false
     ]);
 }
+
 ?>
