@@ -2,12 +2,16 @@
 
 include 'koneksi.php';
 
-$id = $_GET['id'];
+$id = $_GET['id'] ?? '';
 
-$query = mysqli_query($koneksi, "SELECT * FROM users WHERE id='$id'");
+$stmt = $koneksi->prepare("
+    SELECT * FROM users
+    WHERE id = ?
+");
 
-$data = mysqli_fetch_assoc($query);
+$stmt->execute([$id]);
+
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
 
 echo json_encode($data);
-
 ?>
