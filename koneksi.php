@@ -5,15 +5,18 @@ try {
     $pdo = new PDO(
         "mysql:host=" . getenv('MYSQLHOST') .
         ";port=" . getenv('MYSQLPORT') .
-        ";dbname=" . getenv('MYSQLDATABASE'),
+        ";dbname=" . getenv('MYSQLDATABASE') .
+        ";charset=utf8mb4",
         getenv('MYSQLUSER'),
         getenv('MYSQLPASSWORD')
     );
 
-    echo "DB CONNECTED";
+    $pdo->setAttribute(
+        PDO::ATTR_ERRMODE,
+        PDO::ERRMODE_EXCEPTION
+    );
 
 } catch (PDOException $e) {
 
-    echo "ERROR: " . $e->getMessage();
-
+    die("Koneksi gagal: " . $e->getMessage());
 }
