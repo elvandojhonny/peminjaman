@@ -2,51 +2,44 @@
 
 include 'koneksi.php';
 
-$id = $_POST['id'];
-$nama_ruang = $_POST['nama_ruang'];
-$tanggal = $_POST['tanggal'];
-$jam_mulai = $_POST['jam_mulai'];
-$jam_selesai = $_POST['jam_selesai'];
+$id          = $_POST['id'] ?? '';
+$nama_ruang  = $_POST['nama_ruang'] ?? '';
+$tanggal     = $_POST['tanggal'] ?? '';
+$jam_mulai   = $_POST['jam_mulai'] ?? '';
+$jam_selesai = $_POST['jam_selesai'] ?? '';
 
-$query = mysqli_query(
-    $koneksi,
-    "
+$stmt = $koneksi->prepare("
     SELECT *
     FROM peminjaman
     WHERE
-
-        nama_ruang = '$nama_ruang'
-
-        AND tanggal = '$tanggal'
-
+        nama_ruang = ?
+        AND tanggal = ?
         AND LOWER(status) IN ('disetujui', 'digunakan')
-
-        AND id != '$id'
-
+        AND id != ?
         AND (
-
-            ('$jam_mulai' < jam_selesai)
-
+            (? < jam_selesai)
             AND
-
-            ('$jam_selesai' > jam_mulai)
-
+            (? > jam_mulai)
         )
-
     LIMIT 1
-    "
-);
+");
 
-if (mysqli_num_rows($query) > 0) {
+$stmt->execute([
+    $nama_ruang,
+    $tanggal,
+    $id,
+    $jam_mulai,
+    $jam_selesai
+]);
 
-    $data = mysqli_fetch_assoc($query);
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($data) {
 
     echo json_encode([
         "success" => false,
         "message" => "Jadwal bentrok",
-
         "bentrok" => [
-
             "nama_peminjam" => $data['nama_peminjam'],
             "nama_ruang" => $data['nama_ruang'],
             "tanggal" => $data['tanggal'],
@@ -54,7 +47,6 @@ if (mysqli_num_rows($query) > 0) {
             "jam_mulai" => $data['jam_mulai'],
             "jam_selesai" => $data['jam_selesai'],
             "status" => $data['status']
-
         ]
     ]);
 
