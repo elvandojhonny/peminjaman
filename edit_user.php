@@ -2,75 +2,96 @@
 
 include 'koneksi.php';
 
-$id         = $_POST['id'];
+$id       = $_POST['id'] ?? '';
+$nama     = $_POST['nama'] ?? '';
+$nim      = $_POST['nim'] ?? '';
+$email    = $_POST['email'] ?? '';
+$prodi    = $_POST['prodi'] ?? '';
+$fakultas = $_POST['fakultas'] ?? '';
+$no_hp    = $_POST['no_hp'] ?? '';
+$alamat   = $_POST['alamat'] ?? '';
 
-$nama       = $_POST['nama'];
-$nim        = $_POST['nim'];
-$email      = $_POST['email'];
-$prodi      = $_POST['prodi'];
-$fakultas   = $_POST['fakultas'];
-$no_hp      = $_POST['no_hp'];
-$alamat     = $_POST['alamat'];
+$username = $email;
+$password = $_POST['password'] ?? '';
+$role     = $_POST['role'] ?? '';
 
-$username   = $email;
-$password   = $_POST['password'];
-$role       = $_POST['role'];
+try {
 
-if ($password != "") {
+    if ($password != "") {
 
-    // PASSWORD BARU
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $hashedPassword = password_hash(
+            $password,
+            PASSWORD_DEFAULT
+        );
 
-    $query = mysqli_query($koneksi, "UPDATE users SET
+        $stmt = $koneksi->prepare("
+            UPDATE users SET
+                nama = ?,
+                nim = ?,
+                email = ?,
+                prodi = ?,
+                fakultas = ?,
+                no_hp = ?,
+                alamat = ?,
+                username = ?,
+                password = ?,
+                role = ?
+            WHERE id = ?
+        ");
 
-    nama        = '$nama',
-    nim         = '$nim',
-    email       = '$email',
-    prodi       = '$prodi',
-    fakultas    = '$fakultas',
-    no_hp       = '$no_hp',
-    alamat      = '$alamat',
+        $stmt->execute([
+            $nama,
+            $nim,
+            $email,
+            $prodi,
+            $fakultas,
+            $no_hp,
+            $alamat,
+            $username,
+            $hashedPassword,
+            $role,
+            $id
+        ]);
 
-    username    = '$username',
-    password    = '$hashedPassword',
-    role        = '$role'
+    } else {
 
-    WHERE id='$id'
-    ");
+        $stmt = $koneksi->prepare("
+            UPDATE users SET
+                nama = ?,
+                nim = ?,
+                email = ?,
+                prodi = ?,
+                fakultas = ?,
+                no_hp = ?,
+                alamat = ?,
+                username = ?,
+                role = ?
+            WHERE id = ?
+        ");
 
-} else {
-
-    // PASSWORD LAMA TETAP
-    $query = mysqli_query($koneksi, "UPDATE users SET
-
-    nama        = '$nama',
-    nim         = '$nim',
-    email       = '$email',
-    prodi       = '$prodi',
-    fakultas    = '$fakultas',
-    no_hp       = '$no_hp',
-    alamat      = '$alamat',
-
-    username    = '$username',
-    role        = '$role'
-
-    WHERE id='$id'
-    ");
-}
-
-if ($query) {
+        $stmt->execute([
+            $nama,
+            $nim,
+            $email,
+            $prodi,
+            $fakultas,
+            $no_hp,
+            $alamat,
+            $username,
+            $role,
+            $id
+        ]);
+    }
 
     echo json_encode([
         "success" => true,
         "message" => "Berhasil diupdate"
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
         "success" => false,
-        "message" => "Gagal diupdate"
+        "message" => $e->getMessage()
     ]);
 }
-
-?>
