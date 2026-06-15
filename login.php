@@ -9,7 +9,7 @@ $password = $_POST['password'] ?? '';
 
 try {
 
-    $stmt = $pdo->prepare(
+    $stmt = $koneksi->prepare(
         "SELECT * FROM users WHERE email = ?"
     );
 
@@ -27,7 +27,6 @@ try {
                 "message" => "Login berhasil",
 
                 "id" => $data['id'],
-
                 "nama" => $data['nama'],
                 "nim" => $data['nim'],
                 "email" => $data['email'],
@@ -35,7 +34,6 @@ try {
                 "fakultas" => $data['fakultas'],
                 "no_hp" => $data['no_hp'],
                 "alamat" => $data['alamat'],
-
                 "username" => $data['username'],
                 "role" => $data['role']
 
