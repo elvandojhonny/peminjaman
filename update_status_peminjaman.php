@@ -3,111 +3,121 @@
 include 'koneksi.php';
 include 'send_notification.php';
 
-$id = $_POST['id'];
-$status = $_POST['status'];
-$alasan_ditolak = $_POST['alasan_ditolak'];
+$id = $_POST['id'] ?? '';
+$status = $_POST['status'] ?? '';
+$alasan_ditolak = $_POST['alasan_ditolak'] ?? '';
 
+try {
 
-// ==========================
-// AMBIL DATA PEMINJAMAN
-// ==========================
+    // AMBIL DATA PEMINJAMAN
 
-$get = mysqli_query(
-    $koneksi,
-    "SELECT * FROM peminjaman WHERE id='$id'"
-);
-
-$data = mysqli_fetch_assoc($get);
-
-$nama_ruang  = trim($data['nama_ruang']);
-$tanggal     = trim($data['tanggal']);
-$jam_mulai   = trim($data['jam_mulai']);
-$jam_selesai = trim($data['jam_selesai']);
-$user_id     = trim($data['user_id']);
-
-
-// =====================================================
-// CEK BENTROK JIKA STATUS = DISETUJUI
-// =====================================================
-
-if (strtolower($status) == "disetujui") {
-
-    $cek = mysqli_query($koneksi, "
+    $get = $koneksi->prepare("
         SELECT *
         FROM peminjaman
-        WHERE
-
-            id != '$id'
-
-            AND nama_ruang = '$nama_ruang'
-
-            AND tanggal = '$tanggal'
-
-            AND LOWER(status) IN ('disetujui', 'digunakan')
-
-            AND (
-
-                ('$jam_mulai' < jam_selesai)
-
-                AND
-
-                ('$jam_selesai' > jam_mulai)
-
-            )
+        WHERE id = ?
     ");
 
-    if (mysqli_num_rows($cek) > 0) {
+    $get->execute([$id]);
+
+    $data = $get->fetch(PDO::FETCH_ASSOC);
+
+    if (!$data) {
 
         echo json_encode([
             "success" => false,
-            "message" => "Kelas sedang digunakan pada jam tersebut"
+            "message" => "Data peminjaman tidak ditemukan"
         ]);
 
         exit;
     }
-}
 
+    $nama_ruang  = trim($data['nama_ruang']);
+    $tanggal     = trim($data['tanggal']);
+    $jam_mulai   = trim($data['jam_mulai']);
+    $jam_selesai = trim($data['jam_selesai']);
+    $user_id     = trim($data['user_id']);
 
-// ==========================
-// UPDATE STATUS
-// ==========================
+    // CEK BENTROK
 
-$query = mysqli_query($koneksi, "
-    UPDATE peminjaman
-    SET
-        status='$status',
-        alasan_ditolak='$alasan_ditolak'
-    WHERE id='$id'
-");
+    if (strtolower($status) == "disetujui") {
 
+        $cek = $koneksi->prepare("
+            SELECT *
+            FROM peminjaman
+            WHERE
 
-// ==========================
-// JIKA BERHASIL
-// ==========================
+                id != ?
 
-if ($query) {
+                AND nama_ruang = ?
 
-    // ======================
+                AND tanggal = ?
+
+                AND LOWER(status) IN ('disetujui','digunakan')
+
+                AND (
+
+                    (? < jam_selesai)
+
+                    AND
+
+                    (? > jam_mulai)
+
+                )
+
+            LIMIT 1
+        ");
+
+        $cek->execute([
+            $id,
+            $nama_ruang,
+            $tanggal,
+            $jam_mulai,
+            $jam_selesai
+        ]);
+
+        if ($cek->fetch(PDO::FETCH_ASSOC)) {
+
+            echo json_encode([
+                "success" => false,
+                "message" => "Kelas sedang digunakan pada jam tersebut"
+            ]);
+
+            exit;
+        }
+    }
+
+    // UPDATE STATUS
+
+    $update = $koneksi->prepare("
+        UPDATE peminjaman
+        SET
+            status = ?,
+            alasan_ditolak = ?
+        WHERE id = ?
+    ");
+
+    $update->execute([
+        $status,
+        $alasan_ditolak,
+        $id
+    ]);
+
     // AMBIL TOKEN USER
-    // ======================
 
-    $getUser = mysqli_query(
-        $koneksi,
-        "SELECT fcm_token
-         FROM users
-         WHERE id='$user_id'"
-    );
+    $getUser = $koneksi->prepare("
+        SELECT fcm_token
+        FROM users
+        WHERE id = ?
+    ");
 
-    $user = mysqli_fetch_assoc($getUser);
+    $getUser->execute([$user_id]);
+
+    $user = $getUser->fetch(PDO::FETCH_ASSOC);
 
     if (
         isset($user['fcm_token']) &&
         !empty($user['fcm_token'])
     ) {
-
-        // ======================
-        // JUDUL & ISI NOTIF
-        // ======================
 
         $title = "Status Peminjaman";
 
@@ -125,10 +135,6 @@ if ($query) {
                 $alasan_ditolak;
         }
 
-        // ======================
-        // KIRIM NOTIF
-        // ======================
-
         sendNotification(
             $user['fcm_token'],
             $title,
@@ -141,11 +147,11 @@ if ($query) {
         "message" => "Status berhasil diupdate"
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
         "success" => false,
-        "message" => "Status gagal diupdate"
+        "message" => $e->getMessage()
     ]);
 }
 ?>
