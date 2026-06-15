@@ -2,78 +2,83 @@
 
 include 'koneksi.php';
 
-$nama       = $_POST['nama'];
-$nim        = $_POST['nim'];
-$email      = $_POST['email'];
-$prodi      = $_POST['prodi'];
-$fakultas   = $_POST['fakultas'];
-$no_hp      = $_POST['no_hp'];
-$alamat     = $_POST['alamat'];
+$nama      = $_POST['nama'] ?? '';
+$nim       = $_POST['nim'] ?? '';
+$email     = $_POST['email'] ?? '';
+$prodi     = $_POST['prodi'] ?? '';
+$fakultas  = $_POST['fakultas'] ?? '';
+$no_hp     = $_POST['no_hp'] ?? '';
+$alamat    = $_POST['alamat'] ?? '';
+$username  = $email;
+$password  = $_POST['password'] ?? '';
+$role      = $_POST['role'] ?? '';
 
-$username   = $email;
-$password   = $_POST['password'];
-$role       = $_POST['role'];
-
-// HASH PASSWORD
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-// cek email sudah ada atau belum
-$cek = mysqli_query(
-    $koneksi,
-    "SELECT * FROM users WHERE email='$email'"
+$hashedPassword = password_hash(
+    $password,
+    PASSWORD_DEFAULT
 );
 
-if (mysqli_num_rows($cek) > 0) {
+try {
 
-    echo json_encode([
-        "success" => false,
-        "message" => "Email sudah digunakan"
+    $cek = $koneksi->prepare("
+        SELECT id
+        FROM users
+        WHERE email = ?
+    ");
+
+    $cek->execute([$email]);
+
+    if ($cek->rowCount() > 0) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Email sudah digunakan"
+        ]);
+
+        exit;
+    }
+
+    $stmt = $koneksi->prepare("
+        INSERT INTO users
+        (
+            nama,
+            nim,
+            email,
+            prodi,
+            fakultas,
+            no_hp,
+            alamat,
+            username,
+            password,
+            role
+        )
+        VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    $stmt->execute([
+        $nama,
+        $nim,
+        $email,
+        $prodi,
+        $fakultas,
+        $no_hp,
+        $alamat,
+        $username,
+        $hashedPassword,
+        $role
     ]);
-
-    exit;
-}
-
-$query = mysqli_query($koneksi, "INSERT INTO users(
-
-    nama,
-    nim,
-    email,
-    prodi,
-    fakultas,
-    no_hp,
-    alamat,
-
-    username,
-    password,
-    role
-
-) VALUES (
-
-    '$nama',
-    '$nim',
-    '$email',
-    '$prodi',
-    '$fakultas',
-    '$no_hp',
-    '$alamat',
-
-    '$username',
-    '$hashedPassword',
-    '$role'
-)");
-
-if ($query) {
 
     echo json_encode([
         "success" => true,
         "message" => "User berhasil ditambahkan"
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
         "success" => false,
-        "message" => "User gagal ditambahkan"
+        "message" => $e->getMessage()
     ]);
 }
 ?>
