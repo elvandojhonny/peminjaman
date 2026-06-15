@@ -2,34 +2,37 @@
 
 include 'koneksi.php';
 
-$id = $_POST['id'];
-$nama_ruang = $_POST['nama_ruang'];
-$lokasi = $_POST['lokasi'];
-$kapasitas = $_POST['kapasitas'];
+$id         = $_POST['id'] ?? '';
+$nama_ruang = $_POST['nama_ruang'] ?? '';
+$lokasi     = $_POST['lokasi'] ?? '';
+$kapasitas  = $_POST['kapasitas'] ?? '';
 
-$query = mysqli_query(
-    $koneksi,
-    "UPDATE ruang SET
+try {
 
-        nama_ruang = '$nama_ruang',
-        lokasi = '$lokasi',
-        kapasitas = '$kapasitas'
+    $stmt = $koneksi->prepare("
+        UPDATE ruang SET
+            nama_ruang = ?,
+            lokasi = ?,
+            kapasitas = ?
+        WHERE id = ?
+    ");
 
-     WHERE id = '$id'"
-);
-
-if ($query) {
+    $stmt->execute([
+        $nama_ruang,
+        $lokasi,
+        $kapasitas,
+        $id
+    ]);
 
     echo json_encode([
         "success" => true,
         "message" => "Data ruang berhasil diupdate"
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
         "success" => false,
-        "message" => "Data ruang gagal diupdate"
+        "message" => $e->getMessage()
     ]);
 }
-?>
