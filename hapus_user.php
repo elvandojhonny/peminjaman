@@ -1,28 +1,50 @@
 <?php
+
 header("Content-Type: application/json");
+
 include 'koneksi.php';
 
 $id = $_POST['id'] ?? '';
 
 if ($id == '') {
+
     echo json_encode([
         "success" => false,
         "message" => "ID kosong"
     ]);
+
     exit;
 }
 
-$query = mysqli_query($koneksi, "DELETE FROM users WHERE id='$id'");
+try {
 
-if ($query && mysqli_affected_rows($koneksi) > 0) {
-    echo json_encode([
-        "success" => true,
-        "message" => "User berhasil dihapus"
-    ]);
-} else {
+    $stmt = $koneksi->prepare("
+        DELETE FROM users
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$id]);
+
+    if ($stmt->rowCount() > 0) {
+
+        echo json_encode([
+            "success" => true,
+            "message" => "User berhasil dihapus"
+        ]);
+
+    } else {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "User tidak ditemukan / gagal dihapus"
+        ]);
+    }
+
+} catch (PDOException $e) {
+
     echo json_encode([
         "success" => false,
-        "message" => "User tidak ditemukan / gagal dihapus"
+        "message" => $e->getMessage()
     ]);
 }
 ?>
