@@ -1,58 +1,66 @@
 <?php
 
+header('Content-Type: application/json');
+
 include 'koneksi.php';
 
-$email = $_POST['email'];
-$password = $_POST['password'];
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
-$query = mysqli_query(
-    $koneksi,
-    "SELECT * FROM users WHERE email='$email'"
-);
+try {
 
-if (mysqli_num_rows($query) > 0) {
+    $stmt = $pdo->prepare(
+        "SELECT * FROM users WHERE email = ?"
+    );
 
-    $data = mysqli_fetch_assoc($query);
+    $stmt->execute([$email]);
 
-    if (password_verify($password, $data['password'])) {
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        echo json_encode([
+    if ($data) {
 
-            "success" => true,
-            "message" => "Login berhasil",
+        if (password_verify($password, $data['password'])) {
 
-            "id" => $data['id'],
+            echo json_encode([
 
-            "nama" => $data['nama'],
-            "nim" => $data['nim'],
-            "email" => $data['email'],
-            "prodi" => $data['prodi'],
-            "fakultas" => $data['fakultas'],
-            "no_hp" => $data['no_hp'],
-            "alamat" => $data['alamat'],
+                "success" => true,
+                "message" => "Login berhasil",
 
-            "username" => $data['username'],
-            "role" => $data['role']
+                "id" => $data['id'],
 
-        ]);
+                "nama" => $data['nama'],
+                "nim" => $data['nim'],
+                "email" => $data['email'],
+                "prodi" => $data['prodi'],
+                "fakultas" => $data['fakultas'],
+                "no_hp" => $data['no_hp'],
+                "alamat" => $data['alamat'],
+
+                "username" => $data['username'],
+                "role" => $data['role']
+
+            ]);
+
+        } else {
+
+            echo json_encode([
+                "success" => false,
+                "message" => "Password salah"
+            ]);
+        }
 
     } else {
 
         echo json_encode([
-
             "success" => false,
-            "message" => "Password salah"
-
+            "message" => "Email tidak ditemukan"
         ]);
     }
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
-
         "success" => false,
-        "message" => "Email tidak ditemukan"
-
+        "message" => $e->getMessage()
     ]);
 }
-?>
