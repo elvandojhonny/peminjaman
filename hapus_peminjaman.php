@@ -1,19 +1,29 @@
 <?php
+
 include 'koneksi.php';
 
-$id = $_POST['id'];
+$id = $_POST['id'] ?? '';
 
-$query = mysqli_query($koneksi, "DELETE FROM peminjaman WHERE id='$id'");
+try {
 
-if ($query) {
+    $stmt = $koneksi->prepare("
+        DELETE FROM peminjaman
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$id]);
+
     echo json_encode([
         "success" => true,
         "message" => "Riwayat berhasil dihapus"
     ]);
-} else {
+
+} catch (PDOException $e) {
+
     echo json_encode([
         "success" => false,
         "message" => "Riwayat gagal dihapus"
     ]);
 }
+
 ?>
