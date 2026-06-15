@@ -4,61 +4,59 @@ header("Content-Type: application/json");
 
 include 'koneksi.php';
 
-$user_id       = $_POST['user_id'];
-$nama_peminjam = $_POST['nama_peminjam'];
-$nama_gedung   = $_POST['nama_gedung'];
-$nama_ruang    = $_POST['nama_ruang'];
-$tanggal       = $_POST['tanggal'];
-$hari          = $_POST['hari'];
-$jam_mulai     = $_POST['jam_mulai'];
-$jam_selesai   = $_POST['jam_selesai'];
-$keterangan    = $_POST['keterangan'];
+$user_id       = $_POST['user_id'] ?? '';
+$nama_peminjam = $_POST['nama_peminjam'] ?? '';
+$nama_gedung   = $_POST['nama_gedung'] ?? '';
+$nama_ruang    = $_POST['nama_ruang'] ?? '';
+$tanggal       = $_POST['tanggal'] ?? '';
+$hari          = $_POST['hari'] ?? '';
+$jam_mulai     = $_POST['jam_mulai'] ?? '';
+$jam_selesai   = $_POST['jam_selesai'] ?? '';
+$keterangan    = $_POST['keterangan'] ?? '';
 
-$query = mysqli_query(
-    $koneksi,
-    "INSERT INTO peminjaman
-    (
-        user_id,
-        nama_peminjam,
-        nama_gedung,
-        nama_ruang,
-        tanggal,
-        hari,
-        jam_mulai,
-        jam_selesai,
-        keterangan
-    )
-    VALUES
-    (
-        '$user_id',
-        '$nama_peminjam',
-        '$nama_gedung',
-        '$nama_ruang',
-        '$tanggal',
-        '$hari',
-        '$jam_mulai',
-        '$jam_selesai',
-        '$keterangan'
-    )"
-);
+try {
 
-if ($query) {
+    $stmt = $koneksi->prepare("
+        INSERT INTO peminjaman
+        (
+            user_id,
+            nama_peminjam,
+            nama_gedung,
+            nama_ruang,
+            tanggal,
+            hari,
+            jam_mulai,
+            jam_selesai,
+            keterangan
+        )
+        VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
 
-    // ================= DEBUG NOTIF =================
+    $stmt->execute([
+        $user_id,
+        $nama_peminjam,
+        $nama_gedung,
+        $nama_ruang,
+        $tanggal,
+        $hari,
+        $jam_mulai,
+        $jam_selesai,
+        $keterangan
+    ]);
 
     try {
 
         include 'send_notification.php';
 
-        $admin = mysqli_query(
-            $koneksi,
-            "SELECT fcm_token
-             FROM users
-             WHERE role='admin'
-             LIMIT 1"
-        );
+        $admin = $koneksi->query("
+            SELECT fcm_token
+            FROM users
+            WHERE role='admin'
+            LIMIT 1
+        ");
 
-        $dataAdmin = mysqli_fetch_assoc($admin);
+        $dataAdmin = $admin->fetch(PDO::FETCH_ASSOC);
 
         if (
             $dataAdmin &&
@@ -82,21 +80,16 @@ if ($query) {
     }
 
     echo json_encode([
-
         "success" => true,
-
         "message" => "Kelas berhasil diajukan",
-
         "debug_notif" => $hasilNotif
     ]);
 
-} else {
+} catch (PDOException $e) {
 
     echo json_encode([
-
         "success" => false,
-
-        "message" => mysqli_error($koneksi)
+        "message" => $e->getMessage()
     ]);
 }
 ?>
