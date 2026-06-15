@@ -1,19 +1,26 @@
 <?php
+
 include 'koneksi.php';
 
-$query = mysqli_query($koneksi, "
-DELETE FROM peminjaman
-WHERE CONCAT(tanggal,' ',jam_selesai)
-< DATE_SUB(NOW(), INTERVAL 48 HOUR)
-");
+try {
 
-if($query){
+    $stmt = $koneksi->prepare("
+        DELETE FROM peminjaman
+        WHERE CONCAT(tanggal,' ',jam_selesai)
+        < DATE_SUB(NOW(), INTERVAL 48 HOUR)
+    ");
+
+    $stmt->execute();
+
     echo json_encode([
         "success" => true
     ]);
-}else{
+
+} catch (PDOException $e) {
+
     echo json_encode([
         "success" => false
     ]);
 }
+
 ?>
