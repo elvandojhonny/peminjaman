@@ -1,16 +1,17 @@
 <?php
+
 include 'koneksi.php';
 
-$id_gedung = $_GET['id_gedung'];
+$id_gedung = $_GET['id_gedung'] ?? '';
 
-$data = [];
+$stmt = $koneksi->prepare("
+    SELECT * FROM ruang
+    WHERE id_gedung = ?
+");
 
-$query = mysqli_query($koneksi,
-"SELECT * FROM ruang WHERE id_gedung='$id_gedung'");
+$stmt->execute([$id_gedung]);
 
-while($row = mysqli_fetch_assoc($query)){
-    $data[] = $row;
-}
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode($data);
 ?>
