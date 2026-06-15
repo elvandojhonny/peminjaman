@@ -10,9 +10,14 @@ function getAccessToken() {
         "https://www.googleapis.com/auth/firebase.messaging"
     ];
 
+    $jsonKey = json_decode(
+        getenv('FIREBASE_KEY_JSON'),
+        true
+    );
+
     $credentials = new ServiceAccountCredentials(
         $scopes,
-        __DIR__ . '/firebase-key.json'
+        $jsonKey
     );
 
     $token = $credentials->fetchAuthToken();
