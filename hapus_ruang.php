@@ -1,19 +1,29 @@
 <?php
+
 include 'koneksi.php';
 
-$id = $_POST['id'];
+$id = $_POST['id'] ?? '';
 
-$query = mysqli_query($koneksi, "DELETE FROM ruang WHERE id='$id'");
+try {
 
-if ($query) {
+    $stmt = $koneksi->prepare("
+        DELETE FROM ruang
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$id]);
+
     echo json_encode([
         "success" => true,
         "message" => "Ruang berhasil dihapus"
     ]);
-} else {
+
+} catch (PDOException $e) {
+
     echo json_encode([
         "success" => false,
         "message" => "Gagal hapus ruang"
     ]);
 }
+
 ?>
