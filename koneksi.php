@@ -1,19 +1,19 @@
 <?php
 
-$host = getenv('MYSQLHOST');
-$user = getenv('MYSQLUSER');
-$password = getenv('MYSQLPASSWORD');
-$database = getenv('MYSQLDATABASE');
-$port = getenv('MYSQLPORT');
+try {
 
-$koneksi = mysqli_connect(
-    $host,
-    $user,
-    $password,
-    $database,
-    (int)$port
-);
+    $pdo = new PDO(
+        "mysql:host=" . getenv('MYSQLHOST') .
+        ";port=" . getenv('MYSQLPORT') .
+        ";dbname=" . getenv('MYSQLDATABASE'),
+        getenv('MYSQLUSER'),
+        getenv('MYSQLPASSWORD')
+    );
 
-if (!$koneksi) {
-    die("Koneksi gagal: " . mysqli_connect_error());
+    echo "DB CONNECTED";
+
+} catch (PDOException $e) {
+
+    echo "ERROR: " . $e->getMessage();
+
 }
