@@ -1,22 +1,34 @@
 <?php
+
 include 'koneksi.php';
 
-$nama_gedung = $_POST['nama_gedung'];
-$fakultas = $_POST['fakultas'];
+$nama_gedung = $_POST['nama_gedung'] ?? '';
+$fakultas    = $_POST['fakultas'] ?? '';
 
-$query = mysqli_query($koneksi,
-    "INSERT INTO gedung (nama_gedung, fakultas)
-     VALUES ('$nama_gedung', '$fakultas')");
+try {
 
-if($query){
+    $stmt = $koneksi->prepare("
+        INSERT INTO gedung
+        (nama_gedung, fakultas)
+        VALUES (?, ?)
+    ");
+
+    $stmt->execute([
+        $nama_gedung,
+        $fakultas
+    ]);
+
     echo json_encode([
         "success" => true,
         "message" => "Gedung berhasil ditambahkan"
     ]);
-}else{
+
+} catch (PDOException $e) {
+
     echo json_encode([
         "success" => false,
-        "message" => mysqli_error($koneksi)
+        "message" => $e->getMessage()
     ]);
 }
+
 ?>
